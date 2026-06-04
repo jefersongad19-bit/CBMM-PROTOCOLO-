@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protocolos">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<title>Protocolos CBMM</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#080e1c;--surface:#0f172a;--surface2:#1a2540;
+  --border:#1e3a8a44;--accent:#3b82f6;--gold:#f59e0b;
+  --green:#10b981;--red:#ef4444;--text:#f1f5f9;--muted:#64748b;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#060d1f,#0f2460);padding:14px 16px;display:flex;align-items:center;gap:11px;border-bottom:1px solid #1e3a8a66;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px #00000077}
+.logo{width:38px;height:38px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#080e1c;flex-shrink:0}
+.htitle{font-size:17px;font-weight:700}
+.hsub{font-size:10px;color:#93c5fd;font-family:'DM Mono',monospace}
+.hbadge{margin-left:auto;background:#0f2460;border:1px solid var(--accent);color:#93c5fd;font-size:11px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:20px}
+
+main{padding:14px;max-width:620px;margin:0 auto;padding-bottom:100px}
+
+/* SECTION */
+.stitle{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-family:'DM Mono',monospace}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:12px;background:var(--surface);border-radius:12px;padding:4px}
+.tab{flex:1;padding:8px 4px;border:none;background:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;border-radius:9px;cursor:pointer;transition:all .15s;text-align:center}
+.tab.active{background:var(--accent);color:#fff}
+
+/* UPLOAD ZONE */
+.uzone{border:2px dashed #1e3a8a88;border-radius:var(--radius);padding:24px 16px;text-align:center;background:#0a1225;transition:all .2s;position:relative;margin-bottom:10px}
+.uzone.drag-over{border-color:var(--accent);background:#0d1e50}
+.uicon{font-size:32px;margin-bottom:6px}
+.utitle{font-size:14px;font-weight:700;margin-bottom:3px}
+.usub{font-size:11px;color:var(--muted);margin-bottom:12px}
+.ubtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 15px;border-radius:10px;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.bprimary{background:var(--accent);color:#fff}
+.bgold{background:var(--gold);color:#080e1c}
+.bgreen{background:var(--green);color:#fff}
+.bghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.bred{background:var(--red);color:#fff}
+.bfull{width:100%;justify-content:center}
+.bsm{padding:6px 11px;font-size:11px}
+
+/* CARDS */
+.plist{display:flex;flex-direction:column;gap:8px}
+.pcard{background:#0c1628;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s}
+.pcard.cdone{border-color:#10b98144}
+.pcard.cerror{border-color:#ef444444}
+.pcard.cprocessing{border-color:#f59e0b44}
+
+.chead{display:flex;align-items:center;gap:9px;padding:10px 12px}
+.cthumb{width:42px;height:50px;background:var(--surface2);border-radius:6px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cthumb img{width:100%;height:100%;object-fit:cover}
+.cinfo{flex:1;min-width:0}
+.cfname{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cpagenum{font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;margin-top:1px}
+.chip{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:20px}
+.chip-r{background:#1e3a8a;color:#93c5fd}
+.chip-d{background:#064e3b;color:#6ee7b7}
+.chip-e{background:#450a0a;color:#fca5a5}
+.chip-p{background:var(--surface2);color:var(--muted)}
+
+/* PROGRESS */
+.progwrap{padding:0 12px 4px}
+.progtrack{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.progfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:2px;transition:width .3s}
+.proglbl{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+
+/* META */
+.cmeta{padding:0 12px 10px;display:flex;flex-direction:column;gap:7px}
+.mlabel{display:block;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:2px;letter-spacing:.5px}
+.minput{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:8px 11px;outline:none;transition:border-color .15s}
+.minput:focus{border-color:var(--accent)}
+.minput.mnum{font-size:22px;font-weight:700;letter-spacing:3px;color:var(--gold);text-align:center}
+.minput.mfilled{border-color:#10b98177;color:#6ee7b7}
+
+/* NUMPAD */
+.npad{margin-top:5px}
+.nrow{display:flex;gap:4px;margin-bottom:4px}
+.nkey{flex:1;height:48px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:20px;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;border:none}
+.nkey:active{background:var(--accent);transform:scale(.92)}
+.nkey.kdel{color:var(--gold);font-size:22px}
+.nkey.kclr{color:var(--red);font-size:13px;font-weight:800}
+
+/* SUMMARY */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sstat{background:var(--surface);border-radius:10px;padding:10px;text-align:center}
+.snum{font-size:30px;font-weight:800;color:var(--accent)}
+.slbl{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.gitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.gname{font-size:12px;font-weight:700;flex:1}
+.gcnt{font-size:10px;font-family:'DM Mono',monospace;background:#1e3a8a;color:#93c5fd;padding:2px 7px;border-radius:20px}
+
+/* EXPORT */
+.expanel{background:linear-gradient(135deg,#0c1e45,#080e1c);border:1px solid #1e3a8a66;border-radius:var(--radius);padding:16px;margin-top:14px}
+.exacts{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+
+/* MODAL */
+.movl{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(5px);z-index:200;display:none;align-items:flex-end}
+.movl.show{display:flex}
+.msheet{background:var(--surface);border-radius:20px 20px 0 0;padding:22px 18px 32px;width:100%;max-width:620px;margin:0 auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.mtitle{font-size:17px;font-weight:700;margin-bottom:14px}
+.fgrp{margin-bottom:10px}
+.flbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:3px;display:block;letter-spacing:.5px}
+.finput{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;padding:9px 11px;outline:none;transition:border-color .15s}
+.finput:focus{border-color:var(--accent)}
+.macts{display:flex;gap:7px;margin-top:14px}
+.macts .btn{flex:1;justify-content:center}
+
+/* TOAST */
+.tcontainer{position:fixed;top:65px;left:0;right:0;z-index:300;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 16px;border-radius:30px;font-size:12px;font-weight:600;animation:tin .2s ease;max-width:92vw;text-align:center;box-shadow:0 8px 32px #000a}
+.toast.tsuc{background:#064e3b;border-color:#10b981;color:#6ee7b7}
+.toast.terr{background:#450a0a;border-color:#ef4444;color:#fca5a5}
+.toast.twrn{background:#422006;border-color:#f59e0b;color:#fcd34d}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 16px;color:var(--muted)}
+.eico{font-size:44px;margin-bottom:10px;opacity:.45}
+
+/* DIVIDER */
+.div{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* SPINNER */
+.spin{width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:rot .7s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* BOTTOM BAR */
+.bbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 14px 22px;display:flex;gap:7px;max-width:620px;margin:0 auto;z-index:99}
+.bbar .btn{flex:1;justify-content:center;font-size:11px}
+
+/* MULTI-PAGE indicator */
+.mpbadge{display:inline-flex;align-items:center;gap:4px;background:#1e3a8a33;border:1px solid #1e3a8a;color:#93c5fd;font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:20px;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<div class="tcontainer" id="tc"></div>
+
+<header class="hdr">
+  <div class="logo">P</div>
+  <div>
+    <div class="htitle">Protocolos CBMM</div>
+    <div class="hsub">Leitor · Separador · Exportador</div>
+  </div>
+  <div class="hbadge" id="badge">0 itens</div>
+</header>
+
+<main>
+  <div class="stitle">📎 Adicionar Protocolos</div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(0,this)">📄 Individual / Foto</button>
+    <button class="tab" onclick="switchTab(1,this)">📚 Arquivo Completo</button>
+  </div>
+
+  <!-- TAB 0: individual -->
+  <div id="tab0">
+    <div class="uzone" id="uz0">
+      <div class="uicon">📋</div>
+      <div class="utitle">Fotos ou arquivos individuais</div>
+      <div class="usub">Cada arquivo = 1 protocolo</div>
+      <div class="ubtns">
+        <label class="btn bprimary">
+          📷 Câmera
+          <input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="handleFiles(this.files,'single')">
+        </label>
+        <label class="btn bghost">
+          📁 Arquivo
+          <input type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handleFiles(this.files,'single')">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: full scan -->
+  <div id="tab1" style="display:none">
+    <div class="uzone" id="uz1">
+      <div class="uicon">📚</div>
+      <div class="utitle">Arquivo escaneado completo</div>
+      <div class="usub">PDF multi-página ou imagem com vários protocolos — cada página vira um protocolo separado</div>
+      <div class="ubtns">
+        <label class="btn bgold">
+          📷 Foto do conjunto
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files,'multi')">
+        </label>
+        <label class="btn bghost">
+          📄 PDF multi-página
+          <input type="file" accept="application/pdf,image/*" style="display:none" onchange="handleFiles(this.files,'multi')">
+        </label>
+      </div>
+    </div>
+    <div id="splitStatus" style="display:none;margin-bottom:8px">
+      <div class="mpbadge">⚙️ <span id="splitMsg">Separando páginas...</span></div>
+      <div class="progtrack" style="margin-top:4px"><div class="progfill" id="splitFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <div class="stitle" id="listTitle" style="display:none">📄 Protocolos — <span id="countLbl">0</span></div>
+  <div class="plist" id="plist">
+    <div class="empty" id="emptyState">
+      <div class="eico">📂</div>
+      <div style="font-size:13px">Nenhum protocolo ainda<br><span style="font-size:11px;opacity:.6">Use as opções acima para adicionar</span></div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="sumSec" style="display:none">
+    <hr class="div">
+    <div class="stitle">📊 Resumo</div>
+    <div style="background:#0c1628;border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+      <div class="sgrid">
+        <div class="sstat"><div class="snum" id="sTot">0</div><div class="slbl">TOTAL</div></div>
+        <div class="sstat"><div class="snum" id="sRdy" style="color:var(--green)">0</div><div class="slbl">PRONTOS</div></div>
+        <div class="sstat"><div class="snum" id="sGrp" style="color:var(--gold)">0</div><div class="slbl">GRUPOS</div></div>
+        <div class="sstat"><div class="snum" id="sPnd" style="color:var(--muted)">0</div><div class="slbl">PENDENTES</div></div>
+      </div>
+      <div class="stitle">🗂️ Grupos por Cabeçalho</div>
+      <div id="glist"></div>
+    </div>
+
+    <div class="expanel">
+      <div style="font-size:14px;font-weight:700">📦 Exportar 2 ZIPs</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">ZIP 1: individuais renomeados pelo rodapé · ZIP 2: agrupados por cabeçalho (PDF unificado)</div>
+      <div class="exacts">
+        <button class="btn bgreen bfull" id="btnExp" onclick="exportZips()">⬇️ Baixar os 2 ZIPs</button>
+        <button class="btn bgold bfull" onclick="openEmail()">✉️ Enviar por Email</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="bbar" id="bbar" style="display:none">
+  <button class="btn bghost bsm" onclick="clearAll()">🗑️ Limpar</button>
+  <button class="btn bprimary bsm" onclick="processAll()">🔍 Ler Todos</button>
+  <button class="btn bgold bsm" onclick="openEmail()">✉️ Email</button>
+</div>
+
+<!-- EMAIL MODAL -->
+<div class="movl" id="emailMdl">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">✉️ Enviar por Email</div>
+    <div class="fgrp"><label class="flbl">DESTINATÁRIO</label><input class="finput" type="email" id="eTo" placeholder="email@empresa.com" inputmode="email"></div>
+    <div class="fgrp"><label class="flbl">ASSUNTO</label><input class="finput" type="text" id="eSubj" value="Protocolos CBMM – MP04"></div>
+    <div class="fgrp"><label class="flbl">MENSAGEM</label><textarea class="finput" id="eBody" rows="3" style="resize:none">Segue em anexo os protocolos MP04 conforme solicitado.</textarea></div>
+    <div class="macts">
+      <button class="btn bghost" onclick="closeEmail()">Cancelar</button>
+      <button class="btn bgold" onclick="sendEmail()" style="flex:2;justify-content:center">✉️ Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── STATE ─────────────────────────────────────────────────
+let protocols = [];
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(idx, el) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', i === idx);
+    document.getElementById('tab'+i).style.display = i === idx ? 'block' : 'none';
+  });
+}
+
+// ── FILE ENTRY ────────────────────────────────────────────
+async function handleFiles(files, mode) {
+  if (!files || !files.length) return;
+  const arr = Array.from(files);
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('listTitle').style.display = 'block';
+  document.getElementById('bbar').style.display = 'flex';
+
+  if (mode === 'multi') {
+    // Split each file into pages
+    for (const file of arr) {
+      await splitAndAdd(file);
+    }
+  } else {
+    for (const file of arr) {
+      await addProtocol(file, file.name, null);
+    }
+  }
+}
+
+// ── SPLIT MULTI-PAGE ──────────────────────────────────────
+async function splitAndAdd(file) {
+  const ss = document.getElementById('splitStatus');
+  const sm = document.getElementById('splitMsg');
+  const sf = document.getElementById('splitFill');
+  ss.style.display = 'block';
+
+  if (file.type === 'application/pdf') {
+    sm.textContent = 'Carregando PDF...';
+    sf.style.width = '10%';
+
+    const ab = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: ab }).promise;
+    const total = pdfDoc.numPages;
+
+    toast(`📄 PDF com ${total} página(s) detectado — separando...`, 'twrn');
+
+    for (let i = 1; i <= total; i++) {
+      sm.textContent = `Página ${i} de ${total}...`;
+      sf.style.width = Math.round((i/total)*100) + '%';
+
+      const page = await pdfDoc.getPage(i);
+      const scale = 2.0;
+      const vp = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      canvas.width = vp.width; canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.90));
+      const fname = file.name.replace(/\.pdf$/i,'') + `_pag${String(i).padStart(2,'0')}.jpg`;
+      const f = new File([blob], fname, { type: 'image/jpeg' });
+      await addProtocol(f, fname, canvas.toDataURL('image/jpeg', 0.6));
+    }
+
+  } else if (file.type.startsWith('image/')) {
+    // Single image treated as one protocol in multi mode too
+    sm.textContent = 'Adicionando imagem...';
+    sf.style.width = '100%';
+    await addProtocol(file, file.name, URL.createObjectURL(file));
+  }
+
+  ss.style.display = 'none';
+  updateSummary();
+}
+
+// ── ADD PROTOCOL ──────────────────────────────────────────
+async function addProtocol(file, fname, thumbUrl) {
+  const id = 'p' + Date.now() + Math.floor(Math.random()*9999);
+  const thumb = thumbUrl || (file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+
+  const proto = { id, file, name: fname, type: file.type, header: '', footer: '', status: 'pending', thumb };
+  protocols.push(proto);
+  renderCard(proto);
+  updateCounters();
+  // Auto-read after brief delay
+  setTimeout(() => readProtocol(proto), 300);
+}
+
+// ── RENDER CARD ───────────────────────────────────────────
+function renderCard(p) {
+  const list = document.getElementById('plist');
+  const old = document.getElementById('card-'+p.id);
+  if (old) old.remove();
+
+  const thumbHtml = p.thumb
+    ? `<img src="${p.thumb}" alt="">`
+    : `<span>${p.type==='application/pdf'?'📄':'🖼️'}</span>`;
+
+  const el = document.createElement('div');
+  el.className = 'pcard';
+  el.id = 'card-'+p.id;
+  el.innerHTML = `
+    <div class="chead">
+      <div class="cthumb">${thumbHtml}</div>
+      <div class="cinfo">
+        <div class="cfname">${p.name}</div>
+        <div style="margin-top:3px;display:flex;gap:5px;align-items:center">
+          <span class="chip chip-p" id="chip-${p.id}">aguardando</span>
+        </div>
+      </div>
+      <button onclick="removeP('${p.id}')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;line-height:1">×</button>
+    </div>
+    <div class="progwrap" id="pw-${p.id}" style="display:none">
+      <div class="progtrack"><div class="progfill" id="pf-${p.id}" style="width:0%"></div></div>
+      <div class="proglbl" id="pl-${p.id}">Iniciando...</div>
+    </div>
+    <div class="cmeta" id="meta-${p.id}" style="display:none">
+      <div>
+        <label class="mlabel">CABEÇALHO — Nome / Tipo do Protocolo</label>
+        <input class="minput" id="hdr-${p.id}" placeholder="Ex: METALÚRGICA - MP04"
+          value="${p.header}" oninput="upd('${p.id}','header',this.value)">
+      </div>
+      <div>
+        <label class="mlabel">Nº RODAPÉ — Renomear arquivo (somente números)</label>
+        <input class="minput mnum" id="ftr-${p.id}"
+          placeholder="0000000000" value="${p.footer}"
+          inputmode="numeric" pattern="[0-9]*"
+          oninput="upd('${p.id}','footer',this.value)"
+          onfocus="showNP('${p.id}')">
+        <div id="np-${p.id}" style="display:none" class="npad">${buildNP(p.id)}</div>
+      </div>
+    </div>`;
+  list.appendChild(el);
+}
+
+function buildNP(id) {
+  return [['1','2','3'],['4','5','6'],['7','8','9'],['CLR','0','⌫']].map(row =>
+    `<div class="nrow">${row.map(k =>
+      `<button class="nkey ${k==='⌫'?'kdel':k==='CLR'?'kclr':''}" onclick="nk('${id}','${k}')">${k}</button>`
+    ).join('')}</div>`
+  ).join('');
+}
+
+function showNP(id) {
+  document.querySelectorAll('[id^="np-"]').forEach(el => { if (el.id !== 'np-'+id) el.style.display='none'; });
+  const np = document.getElementById('np-'+id);
+  if (np) np.style.display = np.style.display==='block'?'none':'block';
+}
+
+function nk(id, k) {
+  const inp = document.getElementById('ftr-'+id);
+  if (!inp) return;
+  if (k==='⌫') inp.value = inp.value.slice(0,-1);
+  else if (k==='CLR') inp.value = '';
+  else inp.value += k;
+  upd(id,'footer',inp.value);
+}
+
+// ── OCR via Claude API ─────────────────────────────────────
+async function readProtocol(p) {
+  setChip(p.id,'chip-r','lendo...');
+  showProg(p.id, 8, 'Preparando imagem...');
+
+  try {
+    let b64, mime;
+
+    if (p.file.type.startsWith('image/')) {
+      showProg(p.id, 20, 'Otimizando imagem...');
+      const r = await prepImg(p.file);
+      b64 = r.b64; mime = r.mime;
+    } else {
+      showProg(p.id, 20, 'Lendo PDF...');
+      const ab = await p.file.arrayBuffer();
+      b64 = ab2b64(ab); mime = 'application/pdf';
+    }
+
+    showProg(p.id, 40, 'Enviando para OCR...');
+
+    const sys = `Você é um OCR especializado em documentos industriais CBMM.
+Analise o documento e extraia SOMENTE:
+1. CABEÇALHO: título que aparece no TOPO do documento (exemplos: "METALÚRGICA - MP04", "BRITAGEM - BR01", "NIOBE - NB02")
+2. RODAPÉ: número de ~10 dígitos no RODAPÉ/BASE do documento (exemplos: "4900231896", "4900231961")
+
+Responda APENAS em JSON, sem nenhum texto extra:
+{"header":"VALOR","footer":"VALOR"}
+
+Se não encontrar, use "". Priorize precisão sobre velocidade.`;
+
+    const content = mime === 'application/pdf'
+      ? [{ type:'document', source:{ type:'base64', media_type:'application/pdf', data:b64 } },
+         { type:'text', text:'Extraia CABEÇALHO (topo) e NÚMERO DO RODAPÉ (base) deste protocolo industrial CBMM.' }]
+      : [{ type:'image', source:{ type:'base64', media_type:mime, data:b64 } },
+         { type:'text', text:'Extraia CABEÇALHO (topo) e NÚMERO DO RODAPÉ (base) deste protocolo industrial CBMM.' }];
+
+    showProg(p.id, 55, 'Analisando documento...');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 150,
+        system: sys,
+        messages: [{ role:'user', content }]
+      })
+    });
+
+    showProg(p.id, 80, 'Processando resposta...');
+
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`API ${res.status}: ${t.substring(0,120)}`);
+    }
+
+    const data = await res.json();
+    const raw = (data.content || []).map(c => c.text||'').join('').trim();
+
+    let parsed = { header:'', footer:'' };
+    try {
+      const m = raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]*?\}/);
+      if (m) parsed = JSON.parse(m[0]);
+    } catch(e) { console.warn('parse fail:', raw); }
+
+    p.header = (parsed.header || '').trim();
+    p.footer = (parsed.footer || '').replace(/\D/g,'').trim();
+
+    showProg(p.id, 100, 'Concluído ✓');
+    setChip(p.id,'chip-d','lido ✓');
+    document.getElementById('card-'+p.id).className = 'pcard cdone';
+
+    // Show meta fields
+    const meta = document.getElementById('meta-'+p.id);
+    meta.style.display = 'flex'; meta.style.flexDirection = 'column';
+    const hi = document.getElementById('hdr-'+p.id);
+    const fi = document.getElementById('ftr-'+p.id);
+    if (hi) { hi.value = p.header; if(p.header) hi.classList.add('mfilled'); }
+    if (fi) { fi.value = p.footer; if(p.footer) fi.classList.add('mfilled'); }
+
+    setTimeout(() => hideProg(p.id), 1200);
+    updateSummary();
+
+    if (!p.footer) toast(`⚠️ Rodapé não lido em "${p.name}" — insira manualmente`, 'twrn');
+    else if (!p.header) toast(`⚠️ Cabeçalho não lido em "${p.name}" — insira manualmente`, 'twrn');
+
+  } catch(err) {
+    console.error(err);
+    setChip(p.id,'chip-e','erro');
+    showProg(p.id, 100, '❌ '+err.message.substring(0,70));
+    document.getElementById('card-'+p.id).className = 'pcard cerror';
+    const meta = document.getElementById('meta-'+p.id);
+    meta.style.display='flex'; meta.style.flexDirection='column';
+    toast('Erro OCR: insira dados manualmente', 'terr');
+    updateSummary();
+  }
+}
+
+// ── IMAGE PREP ────────────────────────────────────────────
+function prepImg(file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1800;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; }
+      const c = document.createElement('canvas');
+      c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      resolve({ b64: c.toDataURL('image/jpeg',0.90).split(',')[1], mime:'image/jpeg' });
+    };
+    img.src = url;
+  });
+}
+
+function ab2b64(ab) {
+  let bin=''; const b=new Uint8Array(ab);
+  for(let i=0;i<b.length;i++) bin+=String.fromCharCode(b[i]);
+  return btoa(bin);
+}
+
+// ── PROGRESS / STATUS ─────────────────────────────────────
+function setChip(id, cls, txt) {
+  const el = document.getElementById('chip-'+id);
+  if (el) { el.className='chip '+cls; el.textContent=txt; }
+}
+function showProg(id, pct, lbl) {
+  const w=document.getElementById('pw-'+id), f=document.getElementById('pf-'+id), l=document.getElementById('pl-'+id);
+  if(w) w.style.display='block';
+  if(f) f.style.width=pct+'%';
+  if(l) l.textContent=lbl;
+}
+function hideProg(id) { const w=document.getElementById('pw-'+id); if(w) w.style.display='none'; }
+
+// ── STATE ─────────────────────────────────────────────────
+function upd(id, field, val) {
+  const p = protocols.find(p=>p.id===id);
+  if (p) p[field] = val;
+  updateSummary();
+}
+function removeP(id) {
+  protocols = protocols.filter(p=>p.id!==id);
+  const el = document.getElementById('card-'+id);
+  if (el) el.remove();
+  updateCounters(); updateSummary();
+  if (!protocols.length) {
+    document.getElementById('emptyState').style.display='block';
+    document.getElementById('listTitle').style.display='none';
+    document.getElementById('sumSec').style.display='none';
+    document.getElementById('bbar').style.display='none';
+  }
+}
+function clearAll() {
+  if (!confirm('Remover todos os protocolos?')) return;
+  protocols=[];
+  document.getElementById('plist').innerHTML=`<div class="empty" id="emptyState"><div class="eico">📂</div><div style="font-size:13px">Nenhum protocolo ainda</div></div>`;
+  document.getElementById('listTitle').style.display='none';
+  document.getElementById('sumSec').style.display='none';
+  document.getElementById('bbar').style.display='none';
+  updateCounters();
+}
+function processAll() {
+  const pp = protocols.filter(p=>p.status==='pending'||p.status==='error');
+  if (!pp.length) { toast('Todos já processados'); return; }
+  pp.forEach((p,i) => setTimeout(()=>readProtocol(p), i*500));
+  toast(`🔍 Processando ${pp.length} protocolo(s)...`);
+}
+function updateCounters() {
+  const n=protocols.length;
+  document.getElementById('badge').textContent=n+(n===1?' item':' itens');
+  document.getElementById('countLbl').textContent=n;
+}
+function updateSummary() {
+  const total=protocols.length;
+  if (!total) { document.getElementById('sumSec').style.display='none'; return; }
+  document.getElementById('sumSec').style.display='block';
+  const ready=protocols.filter(p=>p.footer&&p.header).length;
+  const pend=protocols.filter(p=>!p.footer||!p.header).length;
+  const groups={};
+  protocols.forEach(p=>{
+    const k=(p.header||'SEM CABEÇALHO').toUpperCase().trim();
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(p);
+  });
+  document.getElementById('sTot').textContent=total;
+  document.getElementById('sRdy').textContent=ready;
+  document.getElementById('sGrp').textContent=Object.keys(groups).length;
+  document.getElementById('sPnd').textContent=pend;
+  document.getElementById('glist').innerHTML=Object.entries(groups).map(([n,items])=>
+    `<div class="gitem"><span style="font-size:15px">📁</span><span class="gname">${n}</span><span class="gcnt">${items.length} arq.</span></div>`
+  ).join('');
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+async function exportZips() {
+  const btn=document.getElementById('btnExp');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Gerando ZIPs...';
+
+  try {
+    // ZIP 1 — individual, renamed by footer
+    const z1 = new JSZip();
+    const f1 = z1.folder('01_Individuais_Rodape');
+    for (const p of protocols) {
+      const ext = p.type==='application/pdf' ? '.pdf' : '.jpg';
+      const fname = (p.footer || sanitize(p.name)) + ext;
+      f1.file(fname, await p.file.arrayBuffer());
+    }
+
+    // ZIP 2 — grouped by header, merged PDF
+    const z2 = new JSZip();
+    const f2 = z2.folder('02_Agrupados_Cabecalho');
+    const groups={};
+    protocols.forEach(p=>{
+      const k=(p.header||'SEM_CABECALHO').replace(/[^\w\s\-]/g,'').trim().replace(/\s+/g,'_');
+      if(!groups[k]) groups[k]=[];
+      groups[k].push(p);
+    });
+
+    for (const [gname, items] of Object.entries(groups)) {
+      if (items.length===1) {
+        const p=items[0];
+        const ext=p.type==='application/pdf'?'.pdf':'.jpg';
+        f2.file(gname+ext, await p.file.arrayBuffer());
+      } else {
+        try {
+          const { PDFDocument } = PDFLib;
+          const merged = await PDFDocument.create();
+          for (const p of items) {
+            if (p.type==='application/pdf') {
+              const src=await PDFDocument.load(await p.file.arrayBuffer());
+              const pgs=await merged.copyPages(src,src.getPageIndices());
+              pgs.forEach(pg=>merged.addPage(pg));
+            } else {
+              const ab=await p.file.arrayBuffer();
+              const u8=new Uint8Array(ab);
+              const img=p.type==='image/png'?await merged.embedPng(u8):await merged.embedJpg(u8);
+              const pg=merged.addPage([img.width,img.height]);
+              pg.drawImage(img,{x:0,y:0,width:img.width,height:img.height});
+            }
+          }
+          f2.file(gname+'.pdf', await merged.save());
+        } catch(e) {
+          // fallback: subfolder
+          const sub=f2.folder(gname);
+          for(let i=0;i<items.length;i++){
+            const p=items[i];
+            const ext=p.type==='application/pdf'?'.pdf':'.jpg';
+            sub.file((p.footer||'p'+(i+1))+ext, await p.file.arrayBuffer());
+          }
+        }
+      }
+    }
+
+    toast('📦 Gerando ZIP 1...','twrn');
+    dlBlob(await z1.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}}), 'Protocolos_Individuais_'+ds()+'.zip');
+
+    await new Promise(r=>setTimeout(r,600));
+
+    toast('📦 Gerando ZIP 2...','twrn');
+    dlBlob(await z2.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}}), 'Protocolos_Agrupados_'+ds()+'.zip');
+
+    toast('✅ Dois ZIPs exportados com sucesso!','tsuc');
+
+  } catch(err) {
+    console.error(err);
+    toast('Erro ao gerar ZIP: '+err.message,'terr');
+  }
+  btn.disabled=false; btn.innerHTML='⬇️ Baixar os 2 ZIPs';
+}
+
+function dlBlob(blob,name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+function ds(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('');}
+function sanitize(s){return s.replace(/[^\w\-]/g,'_').substring(0,40);}
+
+// ── EMAIL ─────────────────────────────────────────────────
+function openEmail(){document.getElementById('emailMdl').classList.add('show');}
+function closeEmail(){document.getElementById('emailMdl').classList.remove('show');}
+async function sendEmail(){
+  const to=document.getElementById('eTo').value.trim();
+  if(!to){toast('Digite o email','terr');return;}
+  closeEmail();
+  toast('📦 Preparando arquivos...');
+  await exportZips();
+  const subj=document.getElementById('eSubj').value;
+  const body=document.getElementById('eBody').value;
+  window.location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body+'\n\n[Anexe os arquivos ZIP baixados]')}`;
+  toast('📧 Abra seu email e anexe os ZIPs baixados','tsuc');
+}
+document.getElementById('emailMdl').addEventListener('click',function(e){if(e.target===this)closeEmail();});
+
+// ── DRAG & DROP ───────────────────────────────────────────
+['uz0','uz1'].forEach(zid=>{
+  const z=document.getElementById(zid);
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('drag-over');});
+  z.addEventListener('dragleave',()=>z.classList.remove('drag-over'));
+  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag-over');handleFiles(e.dataTransfer.files,zid==='uz1'?'multi':'single');});
+});
+
+// ── TOAST ─────────────────────────────────────────────────
+function toast(msg,type=''){
+  const c=document.getElementById('tc');
+  const el=document.createElement('div');
+  el.className='toast '+(type||''); el.textContent=msg; c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},3500);
+}
+
+// ── SW ────────────────────────────────────────────────────
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
