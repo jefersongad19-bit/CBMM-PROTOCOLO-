@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Protocolos" />
+  <title>CBMM Protocolos</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #060e1c;
+      --bg2: #0d1e35;
+      --bg3: #112240;
+      --accent: #00d4ff;
+      --accent2: #ff6b35;
+      --green: #00ff88;
+      --text: #e8f4f8;
+      --text2: #8ab4cc;
+      --border: rgba(0,212,255,0.2);
+      --card: rgba(17,34,64,0.85);
+      --danger: #ff4757;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Grid bg */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── INSTALL BANNER ─── */
+    #install-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #0d1e35, #112240);
+      border-top: 1px solid var(--accent);
+      padding: 16px 20px;
+      box-shadow: 0 -8px 40px rgba(0,212,255,0.2);
+      animation: slideUp 0.4s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    #install-banner .banner-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      max-width: 480px;
+      margin: auto;
+    }
+    #install-banner .banner-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--accent), #0077aa);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    #install-banner .banner-text { flex: 1; }
+    #install-banner .banner-text strong {
+      display: block;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    #install-banner .banner-text span {
+      font-size: 12px; color: var(--text2);
+    }
+    #install-banner .banner-btns { display: flex; gap: 8px; }
+    .btn-install {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-install:active { transform: scale(0.95); }
+    .btn-dismiss {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: relative; z-index: 10;
+      background: linear-gradient(180deg, rgba(6,14,28,0.98) 0%, transparent 100%);
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    header .logo-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    header .logo-box {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), #0055aa);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 14px;
+      color: #000; letter-spacing: 1px;
+    }
+    header h1 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px; font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+    header h1 span { color: var(--accent); }
+    .counter-bar {
+      margin-top: 10px;
+      display: flex; gap: 12px;
+    }
+    .counter-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .counter-chip b { color: var(--accent); font-size: 13px; }
+
+    /* ─── MAIN ─── */
+    main {
+      position: relative; z-index: 5;
+      padding: 16px 16px 120px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    /* ─── UPLOAD ZONE ─── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-zone::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(0,212,255,0.06), transparent 70%);
+      pointer-events: none;
+    }
+    .upload-zone:active, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(0,212,255,0.08);
+    }
+    .upload-zone .upload-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 12px rgba(0,212,255,0.4));
+    }
+    .upload-zone h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 1.5px; color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .upload-zone p { font-size: 13px; color: var(--text2); }
+    #file-input { display: none; }
+
+    /* ─── PROTOCOL CARDS ─── */
+    .section-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .proto-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .proto-card.processing { border-color: var(--accent); }
+    .proto-card.done { border-color: var(--green); }
+    .proto-card.error { border-color: var(--danger); }
+
+    .proto-card img {
+      width: 100%; aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+    }
+
+    .proto-card .card-info {
+      padding: 8px 10px;
+    }
+    .proto-card .card-num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .proto-card .card-group {
+      font-size: 10px;
+      color: var(--text2);
+      display: block;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .proto-card .card-status {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .proto-card.processing .card-status {
+      background: var(--accent);
+      color: #000;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .proto-card.done .card-status { background: var(--green); color: #000; }
+    .proto-card.error .card-status { background: var(--danger); color: #fff; }
+
+    .proto-card .btn-remove {
+      position: absolute;
+      top: 6px; left: 6px;
+      width: 22px; height: 22px;
+      background: rgba(255,71,87,0.85);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    /* editable fields */
+    .proto-card .edit-fields { padding: 0 10px 8px; }
+    .proto-card .edit-fields input {
+      width: 100%;
+      background: rgba(0,212,255,0.07);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      padding: 4px 6px;
+      margin-top: 4px;
+      outline: none;
+    }
+    .proto-card .edit-fields input:focus { border-color: var(--accent); }
+    .proto-card .edit-fields label {
+      font-size: 9px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ─── GROUPS ─── */
+    .group-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .group-block .group-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .group-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .group-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--bg3);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .group-files {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .file-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+    }
+
+    /* ─── BOTTOM ACTIONS ─── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      background: linear-gradient(0deg, var(--bg) 60%, transparent 100%);
+      padding: 12px 16px 24px;
+    }
+    .bottom-inner {
+      max-width: 600px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-bar-wrap {
+      display: none;
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .btn-row { display: flex; gap: 10px; }
+
+    .btn-primary {
+      flex: 1;
+      background: linear-gradient(135deg, var(--accent), #0077cc);
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary:not(:disabled):active { transform: scale(0.97); }
+
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text2);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--text);
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(6,14,28,0.85);
+      z-index: 5000;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--accent);
+      border-radius: 18px;
+      padding: 24px;
+      width: 100%; max-width: 340px;
+      box-shadow: 0 0 60px rgba(0,212,255,0.2);
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-box h3 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+    .modal-box input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .modal-box input:focus { border-color: var(--accent); }
+    .modal-box p { font-size: 12px; color: var(--text2); margin-bottom: 16px; }
+    .modal-btns { display: flex; gap: 10px; }
+    .modal-btns .btn-primary { font-size: 13px; padding: 10px; }
+    .modal-btns .btn-secondary { font-size: 13px; padding: 10px 16px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text2);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    /* API KEY indicator */
+    .api-status {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 6px;
+    }
+    .api-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+    .api-dot.ok { background: var(--green); }
+    .api-label { font-size: 11px; color: var(--text2); cursor: pointer; text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <div class="banner-inner">
+    <div class="banner-icon">📋</div>
+    <div class="banner-text">
+      <strong>CBMM PROTOCOLOS</strong>
+      <span>Instalar como app nativo</span>
+    </div>
+    <div class="banner-btns">
+      <button class="btn-install" id="btn-install-confirm">INSTALAR</button>
+      <button class="btn-dismiss" id="btn-install-dismiss">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL API KEY -->
+<div class="modal-overlay" id="modal-apikey">
+  <div class="modal-box">
+    <h3>🔑 API KEY</h3>
+    <p>Cole sua Anthropic API Key para processar as fotos automaticamente com IA.</p>
+    <input type="password" id="apikey-input" placeholder="sk-ant-..." />
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="saveApiKey()">SALVAR</button>
+      <button class="btn-secondary" onclick="closeApiModal()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-row">
+    <div class="logo-box">CB</div>
+    <div>
+      <h1>CBMM <span>PROTOCOLOS</span></h1>
+      <div class="api-status">
+        <div class="api-dot" id="api-dot"></div>
+        <span class="api-label" onclick="openApiModal()">
+          <span id="api-label-text">Configurar API Key</span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="counter-bar">
+    <div class="counter-chip">📄 <b id="cnt-total">0</b> fotos</div>
+    <div class="counter-chip">✅ <b id="cnt-done">0</b> processadas</div>
+    <div class="counter-chip">📦 <b id="cnt-groups">0</b> grupos</div>
+  </div>
+</header>
+
+<main>
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+    <span class="upload-icon">📸</span>
+    <h2>ADICIONAR PROTOCOLOS</h2>
+    <p>Tire fotos ou selecione imagens<br/>Suporte: JPG, PNG, HEIC</p>
+    <input type="file" id="file-input" accept="image/*" multiple capture="environment" />
+  </div>
+
+  <!-- CARDS -->
+  <div id="cards-section" style="display:none">
+    <div class="section-title">Protocolos adicionados</div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+  <!-- GROUPS -->
+  <div id="groups-section" style="display:none">
+    <div class="section-title">Agrupamento por cabeçalho</div>
+    <div id="groups-container"></div>
+  </div>
+
+  <div id="empty-hint" class="empty-state">
+    <div class="empty-icon">🗂️</div>
+    <p>Adicione fotos dos protocolos.<br/>A IA vai extrair o número e grupo automaticamente.</p>
+  </div>
+</main>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-inner">
+    <div class="progress-bar-wrap" id="progress-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-process" onclick="processAll()" disabled>
+        🤖 PROCESSAR COM IA
+      </button>
+      <button class="btn-secondary" onclick="clearAll()">🗑️</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-zip" onclick="generateZips()" disabled style="background:linear-gradient(135deg,#00ff88,#009944)">
+        📦 GERAR ZIPS E ENVIAR
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
+let protocols = []; // { id, file, dataUrl, fileName, number, group, status }
+let deferredInstallPrompt = null;
+
+// ────────────────────────────────────────────────
+// PWA INSTALL
+// ────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-banner').style.display = 'block';
+});
+
+document.getElementById('btn-install-confirm').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-banner').style.display = 'none';
+});
+
+document.getElementById('btn-install-dismiss').addEventListener('click', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+  showToast('✅ App instalado com sucesso!', 'success');
+});
+
+// ────────────────────────────────────────────────
+// API KEY
+// ────────────────────────────────────────────────
+function getApiKey() { return localStorage.getItem('cbmm_apikey') || ''; }
+
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (!val.startsWith('sk-')) { showToast('❌ Key inválida', 'error'); return; }
+  localStorage.setItem('cbmm_apikey', val);
+  updateApiStatus();
+  closeApiModal();
+  showToast('✅ API Key salva!', 'success');
+}
+
+function openApiModal() {
+  document.getElementById('apikey-input').value = getApiKey();
+  document.getElementById('modal-apikey').classList.add('open');
+}
+
+function closeApiModal() {
+  document.getElementById('modal-apikey').classList.remove('open');
+}
+
+function updateApiStatus() {
+  const key = getApiKey();
+  const dot = document.getElementById('api-dot');
+  const lbl = document.getElementById('api-label-text');
+  if (key) {
+    dot.classList.add('ok');
+    lbl.textContent = 'API Key configurada ✓';
+  } else {
+    dot.classList.remove('ok');
+    lbl.textContent = 'Configurar API Key';
+  }
+}
+updateApiStatus();
+
+// ────────────────────────────────────────────────
+// FILE INPUT
+// ────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', (e) => {
+  handleFiles(Array.from(e.target.files));
+  e.target.value = '';
+});
+
+// Drag & drop
+const uz = document.getElementById('upload-zone');
+uz.addEventListener('dragover', (e) => { e.preventDefault(); uz.classList.add('drag-over'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('drag-over'));
+uz.addEventListener('drop', (e) => {
+  e.preventDefault(); uz.classList.remove('drag-over');
+  handleFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+});
+
+function handleFiles(files) {
+  files.forEach(file => {
+    const id = Date.now() + Math.random();
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      protocols.push({ id, file, dataUrl: ev.target.result, fileName: file.name, number: '', group: '', status: 'pending' });
+      renderAll();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────
+function renderAll() {
+  const total = protocols.length;
+  const done  = protocols.filter(p => p.status === 'done').length;
+  const groups = getGroups();
+
+  document.getElementById('cnt-total').textContent  = total;
+  document.getElementById('cnt-done').textContent   = done;
+  document.getElementById('cnt-groups').textContent = Object.keys(groups).length;
+
+  document.getElementById('empty-hint').style.display    = total ? 'none' : '';
+  document.getElementById('cards-section').style.display = total ? '' : 'none';
+  document.getElementById('groups-section').style.display = done  ? '' : 'none';
+
+  document.getElementById('btn-process').disabled = total === 0 || protocols.every(p => p.status === 'done');
+  document.getElementById('btn-zip').disabled = done === 0;
+
+  renderCards();
+  renderGroups(groups);
+}
+
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+  protocols.forEach(p => {
+    const div = document.createElement('div');
+    div.className = `proto-card ${p.status}`;
+    div.dataset.id = p.id;
+
+    const statusIcon = { pending: '⏳', processing: '⟳', done: '✓', error: '!' }[p.status];
+
+    div.innerHTML = `
+      <img src="${p.dataUrl}" alt="protocolo" />
+      <button class="btn-remove" onclick="removeProto('${p.id}')">✕</button>
+      <div class="card-status">${statusIcon}</div>
+      <div class="card-info">
+        <span class="card-num">${p.number || p.fileName.substring(0,16)}</span>
+        <span class="card-group">${p.group || '—'}</span>
+      </div>
+      <div class="edit-fields">
+        <label>Nº Rodapé</label>
+        <input type="text" value="${p.number}" placeholder="4900XXXXXX" onchange="updateField('${p.id}','number',this.value)" />
+        <label>Grupo</label>
+        <input type="text" value="${p.group}" placeholder="DEFO MP03" onchange="updateField('${p.id}','group',this.value)" />
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function renderGroups(groups) {
+  const cont = document.getElementById('groups-container');
+  cont.innerHTML = '';
+  Object.entries(groups).forEach(([gname, items]) => {
+    const block = document.createElement('div');
+    block.className = 'group-block';
+    block.innerHTML = `
+      <div class="group-header">
+        <span class="group-name">${gname}</span>
+        <span class="group-count">${items.length} arquivo(s)</span>
+      </div>
+      <div class="group-files">${items.map(p => `<span class="file-chip">${p.number || p.fileName}</span>`).join('')}</div>
+    `;
+    cont.appendChild(block);
+  });
+}
+
+function getGroups() {
+  const g = {};
+  protocols.filter(p => p.status === 'done' && p.group).forEach(p => {
+    const key = p.group.trim().toUpperCase();
+    if (!g[key]) g[key] = [];
+    g[key].push(p);
+  });
+  return g;
+}
+
+function updateField(id, field, val) {
+  const p = protocols.find(x => String(x.id) === String(id));
+  if (p) { p[field] = val; renderAll(); }
+}
+
+function removeProto(id) {
+  protocols = protocols.filter(x => String(x.id) !== String(id));
+  renderAll();
+}
+
+function clearAll() {
+  if (protocols.length && !confirm('Limpar tudo?')) return;
+  protocols = [];
+  renderAll();
+}
+
+// ────────────────────────────────────────────────
+// PROCESS WITH AI
+// ────────────────────────────────────────────────
+async function processAll() {
+  const key = getApiKey();
+  if (!key) { openApiModal(); return; }
+
+  const pending = protocols.filter(p => p.status === 'pending' || p.status === 'error');
+  if (!pending.length) { showToast('Nada para processar', ''); return; }
+
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('btn-process').disabled = true;
+
+  let processed = 0;
+  const total = pending.length;
+
+  for (const p of pending) {
+    p.status = 'processing';
+    renderCards();
+    try {
+      const result = await extractFromImage(p.dataUrl, key);
+      p.number = result.number || p.fileName;
+      p.group  = result.group  || 'SEM_GRUPO';
+      p.status = 'done';
+    } catch(err) {
+      console.error(err);
+      p.status = 'error';
+      showToast(`❌ Erro: ${p.fileName}`, 'error');
+    }
+    processed++;
+    document.getElementById('progress-fill').style.width = `${(processed/total)*100}%`;
+    renderAll();
+  }
+
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '0%';
+  showToast(`✅ ${processed} protocolo(s) processado(s)!`, 'success');
+  renderAll();
+}
+
+async function extractFromImage(dataUrl, apiKey) {
+  const base64 = dataUrl.split(',')[1];
+  const mediaType = dataUrl.split(';')[0].split(':')[1];
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5-20251101',
+      max_tokens: 200,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType, data: base64 }
+          },
+          {
+            type: 'text',
+            text: `Analise esta imagem de um protocolo/romaneio da CBMM.
+Extraia SOMENTE:
+1. O número grande no rodapé (formato 49XXXXXXXXX, 10 dígitos começando com 49 ou 48)
+2. O nome do cabeçalho/título do documento (ex: "NIQUEL NIOBIO / DELE", "ETA 2", "DEFO - MP03")
+
+Responda APENAS em JSON válido, sem texto extra:
+{"number":"NUMERO_RODAPE","group":"NOME_CABECALHO"}`
+          }
+        ]
+      }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || resp.statusText);
+  }
+
+  const data = await resp.json();
+  const text = data.content.map(c => c.text || '').join('').trim();
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+// ────────────────────────────────────────────────
+// GENERATE ZIPS
+// ────────────────────────────────────────────────
+async function generateZips() {
+  const done = protocols.filter(p => p.status === 'done');
+  if (!done.length) { showToast('Nenhum protocolo processado', ''); return; }
+
+  const groups = getGroups();
+
+  for (const [groupName, items] of Object.entries(groups)) {
+    const zip = new JSZip();
+    for (const p of items) {
+      const ext = p.file.name.split('.').pop() || 'jpg';
+      const fname = `${p.number}.${ext}`;
+      const blob = await fetch(p.dataUrl).then(r => r.blob());
+      zip.file(fname, blob);
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const safeName = groupName.replace(/[/\\?%*:|"<>]/g, '_');
+    downloadBlob(zipBlob, `${safeName}.zip`);
+    await new Promise(r => setTimeout(r, 400)); // stagger downloads
+  }
+
+  showToast(`📦 ${Object.keys(groups).length} ZIP(s) gerado(s)!`, 'success');
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ────────────────────────────────────────────────
+// TOAST
+// ────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ────────────────────────────────────────────────
+// SERVICE WORKER
+// ────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+renderAll();
+</script>
+</body>
+</html>
